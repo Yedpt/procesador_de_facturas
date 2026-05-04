@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Virtual envs
+.venv/
+venv/
+
+# Env files
+.env
+
+# Secrets
+secrets/
+*.pem
+*.key
+
+# Logs
+*.log
+
+# Testing
+.pytest_cache/
+.coverage

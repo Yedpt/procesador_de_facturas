@@ -1,0 +1,1 @@
+# detectar escaneado, extraer texto

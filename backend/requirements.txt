@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+sqlalchemy
+psycopg2-binary
+python-multipart
+PyMuPDF
+pytesseract
+Pillow
+google-cloud-aiplatform
+google-auth
+python-dotenv
+pgvector
