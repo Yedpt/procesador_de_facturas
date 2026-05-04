@@ -6,6 +6,8 @@ from app.models.schemas import InvoiceOut
 
 from app.services.pdf_ingest import detect_scanned_pdf
 from app.models.schemas import PdfScanCheckOut
+from app.services.pdf_ingest import extract_text_from_pdf
+from app.models.schemas import PdfTextOut
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 
@@ -20,4 +22,10 @@ def process_invoice(file: UploadFile = File(...), db: Session = Depends(get_db))
 async def detect_scanned(file: UploadFile = File(...)):
     pdf_bytes = await file.read()
     result = detect_scanned_pdf(pdf_bytes)
+    return result
+
+@router.post("/extract-text", response_model=PdfTextOut)
+async def extract_text(file: UploadFile = File(...)):
+    pdf_bytes = await file.read()
+    result = extract_text_from_pdf(pdf_bytes)
     return result

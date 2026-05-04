@@ -17,3 +17,10 @@ class PdfScanCheckOut(BaseModel):
     is_scanned: bool
     total_text_chars: int
     page_count: int
+
+class PdfTextOut(BaseModel):
+    text: str
+    source: str
+    is_scanned: bool
+    total_text_chars: int
+    page_count: int
