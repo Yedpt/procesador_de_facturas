@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import List, Optional
 
 
 class InvoiceCreate(BaseModel):
@@ -24,3 +25,24 @@ class PdfTextOut(BaseModel):
     is_scanned: bool
     total_text_chars: int
     page_count: int
+
+class LineItem(BaseModel):
+    description: str
+    quantity: Optional[float] = None
+    unit_price: Optional[float] = None
+    total: Optional[float] = None
+    tax_rate: Optional[float] = None
+
+class InvoiceExtracted(BaseModel):
+    invoice_number: Optional[str] = None
+    issue_date: Optional[str] = None
+    due_date: Optional[str] = None
+    vendor_name: Optional[str] = None
+    vendor_tax_id: Optional[str] = None
+    customer_name: Optional[str] = None
+    customer_tax_id: Optional[str] = None
+    currency: Optional[str] = None
+    subtotal: Optional[float] = None
+    tax: Optional[float] = None
+    total: Optional[float] = None
+    line_items: List[LineItem] = []
