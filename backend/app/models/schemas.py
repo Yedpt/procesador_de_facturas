@@ -46,3 +46,7 @@ class InvoiceExtracted(BaseModel):
     tax: Optional[float] = None
     total: Optional[float] = None
     line_items: List[LineItem] = []
+
+class InvoiceValidationOut(BaseModel):
+    is_valid: bool
+    errors: list[str]

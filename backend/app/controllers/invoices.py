@@ -2,13 +2,14 @@ from fastapi import APIRouter, UploadFile, File, Depends
 from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.repositories.invoice_repo import create_invoice
-from app.models.schemas import InvoiceOut
+from app.models.schemas import InvoiceOut, InvoiceValidationOut
 
 from app.services.pdf_ingest import detect_scanned_pdf, extract_text_from_pdf
 from app.models.schemas import PdfScanCheckOut
 from app.services.pdf_ingest import extract_text_from_pdf
 from app.models.schemas import PdfTextOut
 from app.services.extractor import extract_invoice_structured
+from app.services.validator import validate_invoice_totals
 
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
@@ -37,8 +38,13 @@ async def extract_structured(file: UploadFile = File(...)):
     pdf_bytes = await file.read()
     text_result = extract_text_from_pdf(pdf_bytes)
     structured = extract_invoice_structured(text_result["text"])
+    validation = validate_invoice_totals(structured)
+
     return {
         "source": text_result["source"],
         "is_scanned": text_result["is_scanned"],
         "data": structured,
+        "validation": validation,
     }
+
+
