@@ -44,6 +44,7 @@ class InvoiceExtracted(BaseModel):
     currency: Optional[str] = None
     subtotal: Optional[float] = None
     tax: Optional[float] = None
+    withholding: float = 0.0
     total: Optional[float] = None
     line_items: List[LineItem] = []
 
