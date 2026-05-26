@@ -8,10 +8,11 @@ from app.models.schemas import InvoiceOut, InvoiceValidationOut
 from app.services.pdf_ingest import detect_scanned_pdf, extract_text_from_pdf
 from app.models.schemas import PdfScanCheckOut, TextChunkOut
 from app.services.pdf_ingest import extract_text_from_pdf
-from app.models.schemas import PdfTextOut
+from app.models.schemas import PdfTextOut, EmbeddingIndexOut
 from app.services.extractor import extract_invoice_structured
 from app.services.validator import validate_invoice_totals
 from app.services.chunking import split_text_into_chunks
+from app.services.embedding_indexer import index_invoice_embeddings
 
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
@@ -87,3 +88,17 @@ def get_invoice_chunks(invoice_id: int, db: Session = Depends(get_db)):
 
     chunks = split_text_into_chunks(invoice.raw_text)
     return chunks
+
+@router.post("/{invoice_id}/index-embeddings", response_model=EmbeddingIndexOut)
+def index_embeddings(invoice_id: int, db: Session = Depends(get_db)):
+    invoice = get_invoice(db, invoice_id)
+    if not invoice or not invoice.raw_text:
+        raise HTTPException(status_code=404, detail="Invoice or raw_text not found")
+
+    indexed = index_invoice_embeddings(db, invoice_id, invoice.raw_text)
+    add_trace(db, invoice_id, "index_embeddings", "ok", f"chunks={indexed}")
+
+    return {
+        "invoice_id": invoice_id,
+        "indexed_chunks": indexed,
+    }

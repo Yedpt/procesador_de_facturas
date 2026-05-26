@@ -56,3 +56,7 @@ class TextChunkOut(BaseModel):
     chunk_id: str
     content: str
     start_index: int | None = None
+
+class EmbeddingIndexOut(BaseModel):
+    invoice_id: int
+    indexed_chunks: int

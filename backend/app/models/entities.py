@@ -36,7 +36,7 @@ class InvoiceEmbedding(Base):
     invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=False)
     chunk_id = Column(String, nullable=False)
     content = Column(Text, nullable=False)
-    embedding = Column(Vector(1536), nullable=False)
+    embedding = Column(Vector(768), nullable=False)
     metadata_json = Column(JSON, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
