@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.config.database import get_db
 from app.repositories.invoice_repo import create_invoice, update_invoice_data, get_invoice
 from app.repositories.trace_repo import add_trace
-from app.models.schemas import InvoiceOut, InvoiceValidationOut, SearchQueryIn, SearchResultOut
+from app.models.schemas import InvoiceOut, InvoiceValidationOut, SearchQueryIn, SearchResultOut, AnswerQueryIn, AnswerOut
 
 from app.services.pdf_ingest import detect_scanned_pdf, extract_text_from_pdf
 from app.models.schemas import PdfScanCheckOut, TextChunkOut
@@ -14,6 +14,7 @@ from app.services.validator import validate_invoice_totals
 from app.services.chunking import split_text_into_chunks
 from app.services.embedding_indexer import index_invoice_embeddings
 from app.services.vector_search import search_chunks
+from app.services.answer_service import answer_question
 
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
@@ -113,3 +114,14 @@ def search_invoices(payload: SearchQueryIn, db: Session = Depends(get_db)):
 def search_invoice(invoice_id: int, payload: SearchQueryIn, db: Session = Depends(get_db)):
     results = search_chunks(db, payload.query, payload.top_k, invoice_id=invoice_id)
     return results
+
+@router.post("/answer", response_model=AnswerOut)
+def answer(payload: AnswerQueryIn, db: Session = Depends(get_db)):
+    result = answer_question(
+        db=db,
+        query=payload.query,
+        top_k=payload.top_k,
+        invoice_id=payload.invoice_id,
+    )
+
+    return result

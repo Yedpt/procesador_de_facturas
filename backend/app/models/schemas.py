@@ -71,3 +71,23 @@ class SearchResultOut(BaseModel):
     content: str
     score: float
     start_index: Optional[int] = None
+
+class AnswerQueryIn(BaseModel):
+    """
+    Payload de entrada para el endpoint de respuesta.
+    - query: pregunta del usuario.
+    - top_k: cuantos chunks recuperar para el contexto.
+    - invoice_id: si se desea limitar la busqueda a una factura especifica.
+    """
+    query: str
+    top_k: int = 5
+    invoice_id: Optional[int] = None
+
+class AnswerOut(BaseModel):
+    """
+    Respuesta final generada por Gemini con trazabilidad.
+    - answer: texto final.
+    - used_chunks: lista de chunks usados como contexto.
+    """
+    answer: str
+    used_chunks: List[SearchResultOut]
