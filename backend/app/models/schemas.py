@@ -60,3 +60,14 @@ class TextChunkOut(BaseModel):
 class EmbeddingIndexOut(BaseModel):
     invoice_id: int
     indexed_chunks: int
+
+class SearchQueryIn(BaseModel):
+    query: str
+    top_k: int = 5
+
+class SearchResultOut(BaseModel):
+    invoice_id: int
+    chunk_id: str
+    content: str
+    score: float
+    start_index: Optional[int] = None
