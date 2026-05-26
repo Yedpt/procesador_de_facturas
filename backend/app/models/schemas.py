@@ -51,3 +51,8 @@ class InvoiceExtracted(BaseModel):
 class InvoiceValidationOut(BaseModel):
     is_valid: bool
     errors: list[str]
+
+class TextChunkOut(BaseModel):
+    chunk_id: str
+    content: str
+    start_index: int | None = None

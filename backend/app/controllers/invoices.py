@@ -1,16 +1,17 @@
-from fastapi import APIRouter, UploadFile, File, Depends
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.config.database import get_db
-from app.repositories.invoice_repo import create_invoice, update_invoice_data
+from app.repositories.invoice_repo import create_invoice, update_invoice_data, get_invoice
 from app.repositories.trace_repo import add_trace
 from app.models.schemas import InvoiceOut, InvoiceValidationOut
 
 from app.services.pdf_ingest import detect_scanned_pdf, extract_text_from_pdf
-from app.models.schemas import PdfScanCheckOut
+from app.models.schemas import PdfScanCheckOut, TextChunkOut
 from app.services.pdf_ingest import extract_text_from_pdf
 from app.models.schemas import PdfTextOut
 from app.services.extractor import extract_invoice_structured
 from app.services.validator import validate_invoice_totals
+from app.services.chunking import split_text_into_chunks
 
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
@@ -78,3 +79,11 @@ async def extract_structured(
     }
 
 
+@router.get("/{invoice_id}/chunks", response_model=list[TextChunkOut])
+def get_invoice_chunks(invoice_id: int, db: Session = Depends(get_db)):
+    invoice = get_invoice(db, invoice_id)
+    if not invoice or not invoice.raw_text:
+        raise HTTPException(status_code=404, detail="Invoice or raw_text not found")
+
+    chunks = split_text_into_chunks(invoice.raw_text)
+    return chunks

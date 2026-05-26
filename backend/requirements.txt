@@ -12,3 +12,4 @@ google-cloud-aiplatform
 google-auth
 python-dotenv
 pgvector
+langchain-text-splitters
