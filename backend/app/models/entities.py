@@ -1,8 +1,6 @@
-from sqlalchemy import Column, Integer, String, DateTime, func, JSON, Boolean, Text
+from sqlalchemy import Column, Integer, String, DateTime, func, JSON, Boolean, Text, ForeignKey
+from pgvector.sqlalchemy import Vector
 from app.config.database import Base
-
-
-from sqlalchemy import Column, Integer, String, DateTime, func, JSON, Boolean, Text
 
 class Invoice(Base):
     __tablename__ = "invoices"
@@ -28,4 +26,17 @@ class InvoiceTrace(Base):
     step = Column(String, nullable=False)          # ingest | ocr | extract | validate | persist
     status = Column(String, nullable=False)        # ok | error
     message = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class InvoiceEmbedding(Base):
+    __tablename__ = "invoice_embeddings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=False)
+    chunk_id = Column(String, nullable=False)
+    content = Column(Text, nullable=False)
+    embedding = Column(Vector(768), nullable=False)
+    metadata_json = Column(JSON, nullable=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())

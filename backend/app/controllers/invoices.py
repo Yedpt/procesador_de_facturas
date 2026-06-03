@@ -1,16 +1,20 @@
-from fastapi import APIRouter, UploadFile, File, Depends
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.config.database import get_db
-from app.repositories.invoice_repo import create_invoice, update_invoice_data
+from app.repositories.invoice_repo import create_invoice, update_invoice_data, get_invoice
 from app.repositories.trace_repo import add_trace
-from app.models.schemas import InvoiceOut, InvoiceValidationOut
+from app.models.schemas import InvoiceOut, InvoiceValidationOut, SearchQueryIn, SearchResultOut, AnswerQueryIn, AnswerOut
 
 from app.services.pdf_ingest import detect_scanned_pdf, extract_text_from_pdf
-from app.models.schemas import PdfScanCheckOut
+from app.models.schemas import PdfScanCheckOut, TextChunkOut
 from app.services.pdf_ingest import extract_text_from_pdf
-from app.models.schemas import PdfTextOut
+from app.models.schemas import PdfTextOut, EmbeddingIndexOut
 from app.services.extractor import extract_invoice_structured
 from app.services.validator import validate_invoice_totals
+from app.services.chunking import split_text_into_chunks
+from app.services.embedding_indexer import index_invoice_embeddings
+from app.services.vector_search import search_chunks
+from app.services.answer_service import answer_question
 
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
@@ -78,3 +82,46 @@ async def extract_structured(
     }
 
 
+@router.get("/{invoice_id}/chunks", response_model=list[TextChunkOut])
+def get_invoice_chunks(invoice_id: int, db: Session = Depends(get_db)):
+    invoice = get_invoice(db, invoice_id)
+    if not invoice or not invoice.raw_text:
+        raise HTTPException(status_code=404, detail="Invoice or raw_text not found")
+
+    chunks = split_text_into_chunks(invoice.raw_text)
+    return chunks
+
+@router.post("/{invoice_id}/index-embeddings", response_model=EmbeddingIndexOut)
+def index_embeddings(invoice_id: int, db: Session = Depends(get_db)):
+    invoice = get_invoice(db, invoice_id)
+    if not invoice or not invoice.raw_text:
+        raise HTTPException(status_code=404, detail="Invoice or raw_text not found")
+
+    indexed = index_invoice_embeddings(db, invoice_id, invoice.raw_text)
+    add_trace(db, invoice_id, "index_embeddings", "ok", f"chunks={indexed}")
+
+    return {
+        "invoice_id": invoice_id,
+        "indexed_chunks": indexed,
+    }
+
+@router.post("/search", response_model=list[SearchResultOut])
+def search_invoices(payload: SearchQueryIn, db: Session = Depends(get_db)):
+    results = search_chunks(db, payload.query, payload.top_k, invoice_id=None)
+    return results
+
+@router.post("/{invoice_id}/search", response_model=list[SearchResultOut])
+def search_invoice(invoice_id: int, payload: SearchQueryIn, db: Session = Depends(get_db)):
+    results = search_chunks(db, payload.query, payload.top_k, invoice_id=invoice_id)
+    return results
+
+@router.post("/answer", response_model=AnswerOut)
+def answer(payload: AnswerQueryIn, db: Session = Depends(get_db)):
+    result = answer_question(
+        db=db,
+        query=payload.query,
+        top_k=payload.top_k,
+        invoice_id=payload.invoice_id,
+    )
+
+    return result

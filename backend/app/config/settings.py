@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     gcp_project_id: str
     gcp_location: str = "europe-west1"
     gemini_model: str = "gemini-1.5-pro"
+    embeddings_model: str = "text-embedding-004"
 
     class Config:
         env_file = ".env"

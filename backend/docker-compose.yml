@@ -15,7 +15,7 @@ services:
         condition: service_healthy # Espera a que la DB esté lista, no solo iniciada
 
   db:
-    image: postgres:15-alpine # 'alpine' es mucho más ligera y segura
+    image: pgvector/pgvector:pg15
     environment:
       POSTGRES_USER: ${DB_USER:-invoice_user} # Permite usar variables de entorno
       POSTGRES_PASSWORD: ${DB_PASS:-invoice_pass}
@@ -29,6 +29,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
 
 volumes:
   pgdata:
